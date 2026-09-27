@@ -4,6 +4,8 @@ import { readFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 
 const svg = await readFile(new URL('../public/favicon.svg', import.meta.url));
+// Cor de fundo do ícone = primeiro fill do SVG (o retângulo de fundo)
+const fundo = /fill="(#[0-9a-fA-F]{6})"/.exec(svg.toString())?.[1] ?? '#2f6fed';
 const destino = (nome) => fileURLToPath(new URL(`../public/${nome}`, import.meta.url));
 
 await sharp(svg).resize(192, 192).png().toFile(destino('icone-192.png'));
@@ -12,7 +14,7 @@ await sharp(svg).resize(180, 180).png().toFile(destino('apple-touch-icon.png'));
 
 // Ícone "maskable": o Android recorta em círculo/squircle, então o desenho precisa de margem
 const interno = await sharp(svg).resize(384, 384).png().toBuffer();
-await sharp({ create: { width: 512, height: 512, channels: 4, background: '#2f6fed' } })
+await sharp({ create: { width: 512, height: 512, channels: 4, background: fundo } })
   .composite([{ input: interno, top: 64, left: 64 }])
   .png()
   .toFile(destino('icone-maskable-512.png'));
