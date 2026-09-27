@@ -7,7 +7,7 @@
  *   Obtenha com: npx @google/clasp list-deployments  → https://script.google.com/macros/s/<ID>/exec
  *   (ScriptApp.getService().getUrl() no editor devolve o endereço de TESTE /dev, que exige login.)
  */
-var URL_PUBLICA = '';
+var URL_PUBLICA = 'https://script.google.com/macros/s/AKfycbyNVavFFA0l-G_LonGIxFIqoC10Uf6fwVvu97hpSo_vTjeFijzJbNxfwQTgNa20zgCF/exec';
 var NOME_PLANILHA = 'Lista de Compras - dados';
 
 function configurar() {

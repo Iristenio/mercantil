@@ -37,3 +37,8 @@ npx @google/clasp update-deployment <ID_DA_IMPLANTACAO> --description "..."
 Se acrescentar escopos em `appsscript.json`: push → executar `configurar()` e autorizar → só então update-deployment.
 
 Se desconfiar que o código vazou, execute `trocarToken()` e reconecte os aparelhos.
+
+## Este projeto
+
+- Script: https://script.google.com/d/1jYDcdoQ-JJR-pLVkuIEl0rLI0s5oNgpkhUq_ROvjACY9BKfoiH91GUxW/edit
+- Implantação (App da Web): `AKfycbyNVavFFA0l-G_LonGIxFIqoC10Uf6fwVvu97hpSo_vTjeFijzJbNxfwQTgNa20zgCF`
