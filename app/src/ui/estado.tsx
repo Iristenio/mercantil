@@ -6,7 +6,7 @@ import { useCallback, useContext, useMemo, useRef, useState } from 'preact/hooks
 export type Painel =
   | { tipo: 'produto'; id?: string; nome?: string }
   | { tipo: 'categoria'; id?: string }
-  | { tipo: 'item'; id: string };
+  | { tipo: 'item'; id: string; foco?: 'preco' };
 
 export interface Aviso {
   texto: string;

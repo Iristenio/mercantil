@@ -1,5 +1,8 @@
 import { describe, expect, it } from 'vitest';
-import { ajustarQuantidade, agruparLista, compraAtiva, contagemNaLista, novaCompra, novoItemCompra, valorPrevisto, valorReal } from './compras';
+import {
+  ajustarQuantidade, agruparLista, alternarComprado, alternarIndisponivel, compraAtiva, contagemNaLista, encerrarCompra, iniciarCompra,
+  novaCompra, novoItemCompra, organizarNoMercado, pendentes, previstoDaCompra, valorPrevisto, valorReal,
+} from './compras';
 import { novaCategoria, novoProduto } from './catalogo';
 import type { ItemCompra } from './tipos';
 
@@ -54,5 +57,45 @@ describe('lista de compras', () => {
     const grupos = agruparLista([item('1', sabao), item('2', feijao), item('3', arroz)], [arroz, feijao, sabao], categorias);
     expect(grupos.map((g) => g.categoria.nome)).toEqual(['Limpeza', 'Mercearia']);
     expect(grupos[1].linhas.map((l) => l.produto?.nome)).toEqual(['Arroz', 'Feijão']);
+  });
+});
+
+describe('no mercado', () => {
+  const compra = novaCompra({ id: 'c1' });
+
+  it('R4 — ir às compras congela o previsto', () => {
+    const itens = [item('1')];
+    const iniciada = iniciarCompra(compra, itens, new Date('2026-09-27T10:00:00Z'));
+    expect(iniciada).toMatchObject({ status: 'em_andamento', valor_previsto: 9.18, data_inicio: '2026-09-27T10:00:00.000Z' });
+    expect(previstoDaCompra(iniciada, [...itens, item('2')])).toBe(9.18);
+    expect(previstoDaCompra(compra, [...itens, item('2')])).toBe(18.36);
+  });
+
+  it('R7 — alterna comprado e indisponível', () => {
+    const i = item('1');
+    expect(alternarComprado(i).status).toBe('comprado');
+    expect(alternarComprado(alternarComprado(i)).status).toBe('pendente');
+    expect(alternarIndisponivel(i).status).toBe('indisponivel');
+    expect(alternarComprado(alternarIndisponivel(i)).status).toBe('comprado');
+    expect(pendentes([i, alternarComprado(i)])).toHaveLength(1);
+  });
+
+  it('R9 — encerrar grava valor real e último preço dos comprados', () => {
+    const itens = [
+      item('1', arroz, { status: 'comprado', preco: 5.19 }),
+      item('2', sabao, { status: 'indisponivel', preco: 3 }),
+      item('3', feijao, { status: 'comprado', preco: null }),
+    ];
+    const r = encerrarCompra(compra, itens, [arroz, feijao, sabao], new Date('2026-09-27T15:00:00Z'));
+    expect(r.compra).toMatchObject({ status: 'finalizada', valor_real: 10.38, data_finalizacao: '2026-09-27T15:00:00.000Z' });
+    expect(r.produtos).toHaveLength(1);
+    expect(r.produtos[0]).toMatchObject({ id: 'arroz', ultimo_preco: 5.19, data_ultimo_preco: '2026-09-27' });
+  });
+
+  it('no mercado, pendentes primeiro e busca pelo nome', () => {
+    const grupos = agruparLista([item('1', arroz, { status: 'comprado' }), item('2', feijao)], [arroz, feijao, sabao], categorias);
+    const chave = (t: string) => t.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
+    expect(organizarNoMercado(grupos, '', chave)[0].linhas.map((l) => l.produto?.nome)).toEqual(['Feijão', 'Arroz']);
+    expect(organizarNoMercado(grupos, 'feij', chave)[0].linhas).toHaveLength(1);
   });
 });

@@ -115,3 +115,68 @@ export function validarItemCompra(i: Pick<ItemCompra, 'quantidade' | 'preco'>): 
   if (i.preco !== null && i.preco < 0) erros.push('Preço inválido.');
   return erros;
 }
+
+/* ---------------- No mercado ---------------- */
+
+/** "Ir às compras": a lista passa a em andamento e o previsto fica congelado (R4). */
+export function iniciarCompra(compra: Compra, itens: ItemCompra[], agora = new Date()): Compra {
+  return { ...compra, status: 'em_andamento', data_inicio: agora.toISOString(), valor_previsto: valorPrevisto(itens) };
+}
+
+/** Previsto exibido: calculado na hora durante a montagem; congelado depois de ir às compras. */
+export function previstoDaCompra(compra: Compra, itens: ItemCompra[]): number {
+  return compra.status === 'planejada' ? valorPrevisto(itens) : compra.valor_previsto;
+}
+
+/** Itens que ainda não foram resolvidos (nem comprados, nem indisponíveis). */
+export const pendentes = (itens: ItemCompra[]) => itens.filter((i) => i.status === 'pendente');
+
+/** Marca/desmarca comprado (indisponível vira comprado se tocado). */
+export function alternarComprado(item: ItemCompra): ItemCompra {
+  return { ...item, status: item.status === 'comprado' ? 'pendente' : 'comprado' };
+}
+
+/** R7 — alterna "não encontrei" (fica tachado, não entra no total). */
+export function alternarIndisponivel(item: ItemCompra): ItemCompra {
+  return { ...item, status: item.status === 'indisponivel' ? 'pendente' : 'indisponivel' };
+}
+
+/**
+ * R9 — encerrar: a compra vira finalizada com o valor real, e cada produto comprado com preço
+ * ganha esse preço como "último preço". Devolve só os produtos que mudaram.
+ */
+export function encerrarCompra(compra: Compra, itens: ItemCompra[], produtos: Produto[], agora = new Date()): { compra: Compra; produtos: Produto[] } {
+  const hoje = agora.toISOString().slice(0, 10);
+  const porId = new Map(produtos.map((p) => [p.id, p]));
+  const novos = new Map<Id, Produto>();
+  const comprados = itens
+    .filter((i) => i.status === 'comprado' && i.preco !== null)
+    .sort((a, b) => a.atualizado_em.localeCompare(b.atualizado_em)); // o último marcado vence
+  for (const i of comprados) {
+    const p = porId.get(i.produto_id);
+    if (p) novos.set(p.id, { ...p, ultimo_preco: i.preco, data_ultimo_preco: hoje });
+  }
+  const mudaram = [...novos.values()].filter((p) => {
+    const antes = porId.get(p.id)!;
+    return antes.ultimo_preco !== p.ultimo_preco || antes.data_ultimo_preco !== p.data_ultimo_preco;
+  });
+  return {
+    compra: { ...compra, status: 'finalizada', data_finalizacao: agora.toISOString(), valor_real: valorReal(itens) },
+    produtos: mudaram,
+  };
+}
+
+const ORDEM_STATUS: Record<string, number> = { pendente: 0, comprado: 1, indisponivel: 2 };
+
+/** No mercado: dentro de cada categoria, o que falta pegar vem primeiro. Com busca, filtra pelo nome. */
+export function organizarNoMercado(grupos: GrupoLista[], busca: string, chave: (t: string) => string): GrupoLista[] {
+  const termo = chave(busca);
+  return grupos
+    .map((g) => ({
+      ...g,
+      linhas: g.linhas
+        .filter((l) => !termo || chave(l.produto?.nome ?? '').includes(termo))
+        .sort((a, b) => ORDEM_STATUS[a.item.status] - ORDEM_STATUS[b.item.status]),
+    }))
+    .filter((g) => g.linhas.length > 0);
+}

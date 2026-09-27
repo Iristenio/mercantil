@@ -41,7 +41,7 @@ function ConteudoPainel({ painel }: { painel: Painel }) {
     case 'categoria':
       return <FormCategoria id={painel.id} />;
     case 'item':
-      return <FormItemCompra id={painel.id} />;
+      return <FormItemCompra id={painel.id} foco={painel.foco} />;
   }
 }
 

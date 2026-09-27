@@ -1,6 +1,6 @@
 // Ações da lista de compras: gravam localmente e devolvem a função "Desfazer".
 import type { Compra, ItemCompra, Produto } from '../../dominio/tipos';
-import { compraAtiva, novaCompra, novoItemCompra } from '../../dominio/compras';
+import { compraAtiva, encerrarCompra, iniciarCompra, novaCompra, novoItemCompra } from '../../dominio/compras';
 import { listarTodos, novoId, type Alteracao } from '../../dados/repositorio';
 import { gravarComDesfazer, type Desfazer } from './catalogo';
 
@@ -46,4 +46,18 @@ export function salvarItemCompra(item: ItemCompra): Promise<Desfazer> {
 /** Exclusão lógica (R11). */
 export function removerItemCompra(item: ItemCompra): Promise<Desfazer> {
   return gravarComDesfazer([{ entidade: 'itens_compra', registro: { ...item, status: 'excluido' }, operacao: 'excluir' }]);
+}
+
+/** "Ir às compras": congela o previsto (R4). */
+export function irAsCompras(compra: Compra, itens: ItemCompra[]): Promise<Desfazer> {
+  return gravarComDesfazer([{ entidade: 'compras', registro: iniciarCompra(compra, itens) }]);
+}
+
+/** R9 — encerra a compra e atualiza o último preço dos produtos comprados (tudo numa gravação, com Desfazer). */
+export function encerrar(compra: Compra, itens: ItemCompra[], produtos: Produto[]): Promise<Desfazer> {
+  const r = encerrarCompra(compra, itens, produtos);
+  return gravarComDesfazer([
+    { entidade: 'compras', registro: r.compra },
+    ...r.produtos.map((registro) => ({ entidade: 'produtos', registro }) as Alteracao),
+  ]);
 }
