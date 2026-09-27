@@ -2,12 +2,14 @@
 // Regras: nada é apagado de verdade (exclusão lógica via status); toda gravação carimba
 // atualizado_em e entra na fila, que o motor de sincronização envia quando houver internet.
 import { abrirBanco } from './db';
-import type { Config, Entidade, Item, ItemFila, Registro } from '../dominio/tipos';
+import type { Categoria, Config, Entidade, ItemFila, Produto, Registro } from '../dominio/tipos';
+import { CATEGORIAS_INICIAIS, PRODUTOS_INICIAIS } from './semente';
 import { CONFIG_PADRAO, ENTIDADES } from '../dominio/tipos';
 
 /** ► Nova entidade: acrescente aqui o tipo correspondente. */
 export type MapaEntidades = {
-  itens: Item;
+  categorias: Categoria;
+  produtos: Produto;
 };
 
 export const novoId = (): string => crypto.randomUUID();
@@ -207,12 +209,45 @@ export async function salvarConfig(parcial: Partial<Config>) {
 /* ---------------- Dados iniciais ---------------- */
 
 /**
- * Executado ao abrir o app. Use para criar registros padrão (com ids FIXOS, para não duplicar
- * ao restaurar da planilha) ou migrar dados antigos uma única vez (guardando uma marca com salvarInterno).
+ * Grava registros de dados iniciais SEM mudar os carimbos, e só os que ainda não existem neste aparelho.
+ * Entram na fila (para chegarem à planilha), mas com carimbo antigo: se o servidor já tiver uma
+ * versão mais nova (editada em outro aparelho), ela vence.
  */
-export async function garantirDadosIniciais(_agora = new Date()) {
-  // Exemplo:
-  // if (!(await buscar('itens', 'boas-vindas'))) await salvar('itens', { id: 'boas-vindas', ... });
+export async function semear(alteracoes: Alteracao[]): Promise<number> {
+  const db = await abrirBanco();
+  const nomes = [...new Set<Entidade | 'fila_sync'>([...alteracoes.map((a) => a.entidade), 'fila_sync'])];
+  const tx = db.transaction(nomes, 'readwrite');
+  const fila = tx.objectStore('fila_sync');
+  let novos = 0;
+  for (const { entidade, registro } of alteracoes) {
+    const loja = tx.objectStore(entidade);
+    if (await loja.get(registro.id)) continue;
+    await loja.put(registro as never);
+    await fila.put({
+      id: novoId(),
+      entidade,
+      registro_id: registro.id,
+      operacao: 'criar',
+      payload: registro,
+      tentativas: 0,
+      ultimo_erro: null,
+      criado_em: registro.criado_em,
+    });
+    novos++;
+  }
+  await tx.done;
+  if (novos) avisarMudanca();
+  return novos;
+}
+
+/** Executado ao abrir o app: carrega uma única vez o catálogo importado da planilha antiga. */
+export async function garantirDadosIniciais() {
+  if (await lerInterno('_semente_v1')) return;
+  await semear([
+    ...CATEGORIAS_INICIAIS.map((registro) => ({ entidade: 'categorias', registro }) as Alteracao),
+    ...PRODUTOS_INICIAIS.map((registro) => ({ entidade: 'produtos', registro }) as Alteracao),
+  ]);
+  await salvarInterno('_semente_v1', true);
 }
 
 /** RS09 — pede ao navegador para não apagar os dados locais. */

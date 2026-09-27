@@ -1,0 +1,67 @@
+/* ============ Catálogo ============ */
+.busca {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding-left: 14px;
+  margin: 0 0 8px;
+  background: var(--superficie);
+  border: 1px solid var(--borda);
+  border-radius: 14px;
+  box-shadow: 0 0 0 8px var(--fundo);
+}
+.busca > svg { width: 22px; height: 22px; color: var(--texto-2); flex: none; }
+.busca .campo { background: transparent; border: none; min-height: 52px; padding-left: 8px; }
+.busca .campo::-webkit-search-cancel-button { display: none; }
+
+.grupo { margin-top: 18px; }
+.grupo-titulo {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin: 0 4px 8px;
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--primaria);
+}
+.grupo-titulo small { color: var(--texto-2); font-weight: 600; }
+
+.linha-produto { min-height: 56px; }
+.vazio .botao { margin-top: 8px; }
+.botao svg { width: 22px; height: 22px; flex: none; }
+.vazio .botao svg { opacity: 1; }
+.preco { flex: none; font-variant-numeric: tabular-nums; font-weight: 600; color: var(--texto-2); }
+
+/* ---- Formulário de produto ---- */
+.chip-icone { width: 18px; height: 18px; }
+.prefixo { font-weight: 600; color: var(--texto-2); }
+.campo-preco { width: 130px !important; font-variant-numeric: tabular-nums; }
+.formulario .dica { margin: 0; }
+
+/* ---- Categorias (Ajustes) ---- */
+.lista-categorias { list-style: none; margin: 12px 0 16px; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+.lista-categorias li {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding-right: 4px;
+  background: var(--superficie-2);
+  border-radius: 12px;
+}
+.categoria-nome {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 52px;
+  padding: 0 14px;
+  text-align: left;
+}
+.categoria-nome small { color: var(--texto-2); }
+.lista-categorias .botao-icone:disabled { opacity: 0.3; cursor: default; }

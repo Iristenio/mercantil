@@ -3,7 +3,7 @@
 App **só para celular**, funciona **sem internet** (dentro do mercado o sinal costuma ser ruim) e
 sincroniza com uma planilha do Google (conta pessoal) quando há conexão.
 
-Baseado no sistema atual em Apps Script (planilha **COMPRAS**), que tem três telas:
+Baseado no sistema atual em Apps Script (planilha **COMPRAS**, 74 produtos em 5 categorias), que tem três telas:
 **Catálogo → Montagem da lista → Modo compras**. A ideia é manter esse fluxo, que já funciona, e
 deixá-lo mais rápido e confiável no celular.
 

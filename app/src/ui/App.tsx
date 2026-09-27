@@ -7,31 +7,34 @@ import { AvisoAtualizacao } from './layout/AvisoAtualizacao';
 import { AvisoDesfazer } from './componentes/AvisoDesfazer';
 import { Dialogo } from './componentes/Dialogo';
 import { ProvedorEstado, useEstado, type Painel } from './estado';
-import { TelaInicio } from './telas/TelaInicio';
-import { TelaItens } from './telas/TelaItens';
+import { TelaCatalogo } from './telas/TelaCatalogo';
 import { TelaAjustes } from './telas/TelaAjustes';
-import { FormItem } from './paineis/FormItem';
-import { IconeLista } from './icones';
+import { FormProduto } from './paineis/FormProduto';
+import { FormCategoria } from './paineis/FormCategoria';
+import { IconeCesta } from './icones';
 
 /** ► Nova tela: acrescente aqui (e em TELAS/MENU, em rotas.ts). */
 const TELA: Record<Tela, () => JSX.Element> = {
-  inicio: TelaInicio,
-  itens: TelaItens,
+  catalogo: TelaCatalogo,
   config: TelaAjustes,
 };
 
 /** ► Novo painel: título e conteúdo de cada tipo declarado em estado.tsx. */
 function tituloPainel(p: Painel): string {
   switch (p.tipo) {
-    case 'item':
-      return p.id ? 'Item' : 'Novo item';
+    case 'produto':
+      return p.id ? 'Produto' : 'Novo produto';
+    case 'categoria':
+      return p.id ? 'Categoria' : 'Nova categoria';
   }
 }
 
 function ConteudoPainel({ painel }: { painel: Painel }) {
   switch (painel.tipo) {
-    case 'item':
-      return <FormItem id={painel.id} />;
+    case 'produto':
+      return <FormProduto id={painel.id} nome={painel.nome} />;
+    case 'categoria':
+      return <FormCategoria id={painel.id} />;
   }
 }
 
@@ -41,14 +44,14 @@ function Estrutura() {
   const Conteudo = TELA[tela];
 
   /** ► Opções do botão "+" (com uma só, ele cria direto). */
-  const opcoesNovo: OpcaoNovo[] = [{ rotulo: 'Item', Icone: IconeLista, acao: () => abrirPainel({ tipo: 'item' }) }];
+  const opcoesNovo: OpcaoNovo[] = [{ rotulo: 'Novo produto', Icone: IconeCesta, acao: () => abrirPainel({ tipo: 'produto' }) }];
 
   return (
     <div class="estrutura">
       <MenuLateral atual={tela} />
       <main class="principal">
         <Conteudo />
-        {tela !== 'config' && <BotaoNovo opcoes={opcoesNovo} />}
+        {tela === 'catalogo' && <BotaoNovo opcoes={opcoesNovo} />}
       </main>
       {painel && (
         <PainelLateral titulo={tituloPainel(painel)} aoFechar={fecharPainel}>

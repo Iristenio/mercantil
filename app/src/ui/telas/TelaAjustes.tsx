@@ -1,8 +1,9 @@
 // Tela Ajustes: conexão com o Google, preferências e informações do aparelho.
 import { useEffect, useState } from 'preact/hooks';
-import type { Config } from '../../dominio/tipos';
-import { salvarConfig } from '../../dados/repositorio';
-import { useConfig } from '../../dados/ganchos';
+import { ativos, ordenarCategorias } from '../../dominio/catalogo';
+import { useEntidade } from '../../dados/ganchos';
+import { reordenarCategoria } from '../acoes/catalogo';
+import { IconeMais, IconeSetaBaixo, IconeSetaCima } from '../icones';
 import { baixarTudo, conectar, desconectar, ErroApi, sincronizar } from '../../sync/motor';
 import { APP } from '../../app.config';
 import { descreverUltimaSync, ROTULO_STATUS, useSync } from '../../sync/ganchos';
@@ -16,7 +17,7 @@ export function TelaAjustes() {
       </header>
       <div class="conteudo ajustes">
         <CartaoGoogle />
-        <CartaoPreferencias />
+        <CartaoCategorias />
         <CartaoAparelho />
       </div>
     </>
@@ -134,29 +135,37 @@ function CartaoGoogle() {
   );
 }
 
-/* ---------------- Preferências ---------------- */
+/* ---------------- Categorias ---------------- */
 
-function CartaoPreferencias() {
-  const config = useConfig();
-  const mudar = (parcial: Partial<Config>) => salvarConfig(parcial);
+function CartaoCategorias() {
+  const { abrirPainel } = useEstado();
+  const todas = useEntidade('categorias');
+  const produtos = ativos(useEntidade('produtos'));
+  const categorias = ordenarCategorias(todas);
 
   return (
     <section class="cartao">
-      <h2>Preferências</h2>
-      <div class="preferencias">
-        <label>
-          <span>A semana começa no</span>
-          <div class="segmentado pequeno">
-            <button role="radio" aria-checked={config.primeiro_dia_semana === 0} onClick={() => mudar({ primeiro_dia_semana: 0 })}>
-              Domingo
+      <h2>Categorias</h2>
+      <p class="dica">Coloque na ordem dos corredores do mercado — a lista de compras segue esta ordem.</p>
+      <ul class="lista-categorias">
+        {categorias.map((c, i) => (
+          <li key={c.id}>
+            <button class="categoria-nome" onClick={() => abrirPainel({ tipo: 'categoria', id: c.id })}>
+              <strong>{c.nome}</strong>
+              <small>{produtos.filter((p) => p.categoria_id === c.id).length}</small>
             </button>
-            <button role="radio" aria-checked={config.primeiro_dia_semana === 1} onClick={() => mudar({ primeiro_dia_semana: 1 })}>
-              Segunda
+            <button class="botao-icone" aria-label={`Subir ${c.nome}`} disabled={i === 0} onClick={() => reordenarCategoria(todas, c.id, -1)}>
+              <IconeSetaCima />
             </button>
-          </div>
-        </label>
-      </div>
-      <p class="dica">As preferências valem para este aparelho.</p>
+            <button class="botao-icone" aria-label={`Descer ${c.nome}`} disabled={i === categorias.length - 1} onClick={() => reordenarCategoria(todas, c.id, 1)}>
+              <IconeSetaBaixo />
+            </button>
+          </li>
+        ))}
+      </ul>
+      <button class="botao" onClick={() => abrirPainel({ tipo: 'categoria' })}>
+        <IconeMais /> Nova categoria
+      </button>
     </section>
   );
 }

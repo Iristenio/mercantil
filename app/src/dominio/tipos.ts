@@ -12,21 +12,31 @@ export interface Registro {
   atualizado_em: string;
 }
 
-/* ---------------- Entidade de exemplo: Item ----------------
-   Serve de modelo. Renomeie/adapte ou apague quando criar as entidades do seu projeto. */
+/* ---------------- Catálogo ---------------- */
 
-export type StatusItem = 'ativo' | 'concluido' | 'excluido';
+export type StatusCadastro = 'ativo' | 'excluido';
 
-export interface Item extends Registro {
-  titulo: string;
-  descricao: string;
-  data: string | null; // AAAA-MM-DD
-  hora: string | null; // HH:mm
-  status: StatusItem;
+export interface Categoria extends Registro {
+  nome: string;
+  /** Ordem de exibição (idealmente a ordem dos corredores do mercado). */
+  ordem: number;
+  status: StatusCadastro;
+}
+
+export const UNIDADES = ['Un', 'Kg', 'g', 'L', 'ml', 'Dz', 'Pacote', 'Caixa'] as const;
+
+export interface Produto extends Registro {
+  nome: string;
+  categoria_id: Id;
+  unidade: string;
+  /** Preço unitário da última compra finalizada. */
+  ultimo_preco: number | null;
+  data_ultimo_preco: string | null; // AAAA-MM-DD
+  status: StatusCadastro;
 }
 
 /** Nomes das entidades sincronizadas (cada uma vira uma loja local e uma aba na planilha). */
-export const ENTIDADES = ['itens'] as const;
+export const ENTIDADES = ['categorias', 'produtos'] as const;
 export type Entidade = (typeof ENTIDADES)[number];
 
 /* ---------------- Infraestrutura ---------------- */

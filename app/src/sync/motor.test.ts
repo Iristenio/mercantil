@@ -5,7 +5,7 @@ import { createRequire } from 'node:module';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { abrirBanco, fecharBanco, NOME_BANCO } from '../dados/db';
 import { buscar, listarFila, salvar, salvarInterno } from '../dados/repositorio';
-import { novoItem } from '../dominio/itens';
+import { novoProduto } from '../dominio/catalogo';
 import { baixarTudo, decodificarCodigo, lerEstadoSync, sincronizar } from './motor';
 
 const require = createRequire(import.meta.url);
@@ -40,8 +40,8 @@ beforeEach(async () => {
   await salvarInterno('_conexao', { url: 'https://exemplo/exec', token: TOKEN });
 });
 
-const item = (id: string, titulo: string, atualizado = '2026-01-01T10:00:00.000Z') =>
-  ({ ...novoItem({ id, titulo }), atualizado_em: atualizado, criado_em: atualizado });
+const item = (id: string, nome: string, atualizado = '2026-01-01T10:00:00.000Z') =>
+  ({ ...novoProduto({ id, nome }), atualizado_em: atualizado, criado_em: atualizado });
 
 describe('código de conexão', () => {
   it('decodifica o formato APP1', () => {
@@ -53,52 +53,52 @@ describe('código de conexão', () => {
 
 describe('núcleo do backend', () => {
   it('linha ↔ registro preserva tipos', () => {
-    const reg = { ...item('a', 'x'), data: null, hora: '10:00' };
-    expect(nucleo.linhaParaRegistro('itens', nucleo.registroParaLinha('itens', reg, 'T'))).toEqual(reg);
+    const reg = { ...item('a', 'x'), ultimo_preco: 4.59, data_ultimo_preco: null };
+    expect(nucleo.linhaParaRegistro('produtos', nucleo.registroParaLinha('produtos', reg, 'T'))).toEqual(reg);
   });
   it('versão antiga não sobrescreve a mais nova', () => {
-    outroAparelhoEnvia('itens', item('a', 'nova', '2026-01-01T12:00:00.000Z'));
-    outroAparelhoEnvia('itens', item('a', 'velha', '2026-01-01T09:00:00.000Z'));
-    expect(tabelas.itens.linhas()[0][1]).toBe('nova');
+    outroAparelhoEnvia('produtos', item('a', 'nova', '2026-01-01T12:00:00.000Z'));
+    outroAparelhoEnvia('produtos', item('a', 'velha', '2026-01-01T09:00:00.000Z'));
+    expect(tabelas.produtos.linhas()[0][1]).toBe('nova');
   });
 });
 
 describe('sincronização', () => {
   it('envia a fila local e a esvazia', async () => {
-    await salvar('itens', item('i1', 'Primeiro'));
+    await salvar('produtos', item('i1', 'Primeiro'));
     await sincronizar();
     expect(await listarFila()).toHaveLength(0);
-    expect(tabelas.itens.linhas().map((l: string[]) => l[1])).toEqual(['Primeiro']);
+    expect(tabelas.produtos.linhas().map((l: string[]) => l[1])).toEqual(['Primeiro']);
     expect(lerEstadoSync().status).toBe('sincronizado');
   });
 
   it('recebe o que outro aparelho enviou, sem devolver à fila', async () => {
-    outroAparelhoEnvia('itens', item('i9', 'Do celular'));
+    outroAparelhoEnvia('produtos', item('i9', 'Do celular'));
     await sincronizar();
-    expect((await buscar('itens', 'i9'))?.titulo).toBe('Do celular');
+    expect((await buscar('produtos', 'i9'))?.nome).toBe('Do celular');
     expect(await listarFila()).toHaveLength(0);
   });
 
   it('token inválido vira erro e mantém a fila', async () => {
     await salvarInterno('_conexao', { url: 'https://exemplo/exec', token: 'errado' });
-    await salvar('itens', item('i1', 'x'));
+    await salvar('produtos', item('i1', 'x'));
     await sincronizar();
     expect(lerEstadoSync().status).toBe('erro');
     expect(await listarFila()).toHaveLength(1);
   });
 
   it('envia em lotes', async () => {
-    for (let n = 0; n < 120; n++) await salvar('itens', item(`i${n}`, `item ${n}`));
+    for (let n = 0; n < 120; n++) await salvar('produtos', item(`i${n}`, `item ${n}`));
     await sincronizar();
     expect(await listarFila()).toHaveLength(0);
-    expect(tabelas.itens.linhas()).toHaveLength(120);
+    expect(tabelas.produtos.linhas()).toHaveLength(120);
   });
 
   it('"baixar tudo" restaura um aparelho vazio', async () => {
-    outroAparelhoEnvia('itens', item('i1', 'a'));
+    outroAparelhoEnvia('produtos', item('i1', 'a'));
     await sincronizar();
-    await (await abrirBanco()).clear('itens');
+    await (await abrirBanco()).clear('produtos');
     await baixarTudo();
-    expect((await buscar('itens', 'i1'))?.titulo).toBe('a');
+    expect((await buscar('produtos', 'i1'))?.nome).toBe('a');
   });
 });

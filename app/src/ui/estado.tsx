@@ -3,7 +3,9 @@ import { createContext, type ComponentChildren } from 'preact';
 import { useCallback, useContext, useMemo, useRef, useState } from 'preact/hooks';
 
 /** ► Novo formulário/painel: acrescente um tipo aqui e trate em App.tsx (título e conteúdo). */
-export type Painel = { tipo: 'item'; id?: string };
+export type Painel =
+  | { tipo: 'produto'; id?: string; nome?: string }
+  | { tipo: 'categoria'; id?: string };
 
 export interface Aviso {
   texto: string;

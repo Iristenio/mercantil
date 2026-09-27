@@ -124,3 +124,29 @@ export const IconeAlerta = (p: Props) => (
     <path d="M12 9v4M12 17h.01" />
   </Base>
 );
+
+export const IconeCesta = (p: Props) => (
+  <Base {...p}>
+    <path d="M3 9h18l-1.6 9.2a2 2 0 0 1-2 1.8H6.6a2 2 0 0 1-2-1.8L3 9z" />
+    <path d="M8 9l3-5M16 9l-3-5M9 13v3M15 13v3" />
+  </Base>
+);
+
+export const IconeBusca = (p: Props) => (
+  <Base {...p}>
+    <circle cx="11" cy="11" r="6.5" />
+    <path d="M20 20l-4.2-4.2" />
+  </Base>
+);
+
+export const IconeSetaCima = (p: Props) => (
+  <Base {...p}>
+    <path d="M6 15l6-6 6 6" />
+  </Base>
+);
+
+export const IconeSetaBaixo = (p: Props) => (
+  <Base {...p}>
+    <path d="M6 9l6 6 6-6" />
+  </Base>
+);
