@@ -3,17 +3,19 @@
 // ► Nova entidade? Acrescente a loja em AppDB e crie-a num bloco `if (versaoAntiga < N)`,
 //   aumentando VERSAO. Nunca altere blocos antigos (os aparelhos já instalados dependem deles).
 import { openDB, type DBSchema, type IDBPDatabase } from 'idb';
-import type { Categoria, ItemFila, Produto } from '../dominio/tipos';
+import type { Categoria, Compra, ItemCompra, ItemFila, Produto } from '../dominio/tipos';
 
 export interface AppDB extends DBSchema {
   categorias: { key: string; value: Categoria };
   produtos: { key: string; value: Produto };
+  compras: { key: string; value: Compra };
+  itens_compra: { key: string; value: ItemCompra };
   fila_sync: { key: string; value: ItemFila; indexes: { registro_id: string } };
   config: { key: string; value: { chave: string; valor: unknown } };
 }
 
 export const NOME_BANCO = 'mercantil';
-const VERSAO = 1;
+const VERSAO = 2;
 
 let conexao: Promise<IDBPDatabase<AppDB>> | null = null;
 
@@ -26,7 +28,10 @@ export function abrirBanco(): Promise<IDBPDatabase<AppDB>> {
         db.createObjectStore('fila_sync', { keyPath: 'id' }).createIndex('registro_id', 'registro_id');
         db.createObjectStore('config', { keyPath: 'chave' });
       }
-      // if (versaoAntiga < 2) { db.createObjectStore('minha_entidade', { keyPath: 'id' }); }
+      if (versaoAntiga < 2) {
+        db.createObjectStore('compras', { keyPath: 'id' });
+        db.createObjectStore('itens_compra', { keyPath: 'id' });
+      }
     },
   });
   return conexao;

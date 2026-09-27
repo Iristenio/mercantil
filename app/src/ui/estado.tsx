@@ -5,7 +5,8 @@ import { useCallback, useContext, useMemo, useRef, useState } from 'preact/hooks
 /** ► Novo formulário/painel: acrescente um tipo aqui e trate em App.tsx (título e conteúdo). */
 export type Painel =
   | { tipo: 'produto'; id?: string; nome?: string }
-  | { tipo: 'categoria'; id?: string };
+  | { tipo: 'categoria'; id?: string }
+  | { tipo: 'item'; id: string };
 
 export interface Aviso {
   texto: string;

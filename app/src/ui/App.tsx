@@ -1,5 +1,5 @@
 import type { JSX } from 'preact';
-import { useTela, type Tela } from './rotas';
+import { irPara, useTela, type Tela } from './rotas';
 import { MenuLateral } from './layout/MenuLateral';
 import { PainelLateral } from './layout/PainelLateral';
 import { BotaoNovo, type OpcaoNovo } from './layout/BotaoNovo';
@@ -7,14 +7,17 @@ import { AvisoAtualizacao } from './layout/AvisoAtualizacao';
 import { AvisoDesfazer } from './componentes/AvisoDesfazer';
 import { Dialogo } from './componentes/Dialogo';
 import { ProvedorEstado, useEstado, type Painel } from './estado';
+import { TelaLista } from './telas/TelaLista';
 import { TelaCatalogo } from './telas/TelaCatalogo';
 import { TelaAjustes } from './telas/TelaAjustes';
 import { FormProduto } from './paineis/FormProduto';
 import { FormCategoria } from './paineis/FormCategoria';
+import { FormItemCompra } from './paineis/FormItemCompra';
 import { IconeCesta } from './icones';
 
 /** ► Nova tela: acrescente aqui (e em TELAS/MENU, em rotas.ts). */
 const TELA: Record<Tela, () => JSX.Element> = {
+  lista: TelaLista,
   catalogo: TelaCatalogo,
   config: TelaAjustes,
 };
@@ -26,6 +29,8 @@ function tituloPainel(p: Painel): string {
       return p.id ? 'Produto' : 'Novo produto';
     case 'categoria':
       return p.id ? 'Categoria' : 'Nova categoria';
+    case 'item':
+      return 'Item da lista';
   }
 }
 
@@ -35,6 +40,8 @@ function ConteudoPainel({ painel }: { painel: Painel }) {
       return <FormProduto id={painel.id} nome={painel.nome} />;
     case 'categoria':
       return <FormCategoria id={painel.id} />;
+    case 'item':
+      return <FormItemCompra id={painel.id} />;
   }
 }
 
@@ -44,14 +51,18 @@ function Estrutura() {
   const Conteudo = TELA[tela];
 
   /** ► Opções do botão "+" (com uma só, ele cria direto). */
-  const opcoesNovo: OpcaoNovo[] = [{ rotulo: 'Novo produto', Icone: IconeCesta, acao: () => abrirPainel({ tipo: 'produto' }) }];
+  const opcoesNovo: Partial<Record<Tela, OpcaoNovo[]>> = {
+    lista: [{ rotulo: 'Escolher produtos', Icone: IconeCesta, acao: () => irPara('catalogo') }],
+    catalogo: [{ rotulo: 'Novo produto', Icone: IconeCesta, acao: () => abrirPainel({ tipo: 'produto' }) }],
+  };
+  const opcoes = opcoesNovo[tela];
 
   return (
     <div class="estrutura">
       <MenuLateral atual={tela} />
       <main class="principal">
         <Conteudo />
-        {tela === 'catalogo' && <BotaoNovo opcoes={opcoesNovo} />}
+        {opcoes && <BotaoNovo opcoes={opcoes} />}
       </main>
       {painel && (
         <PainelLateral titulo={tituloPainel(painel)} aoFechar={fecharPainel}>

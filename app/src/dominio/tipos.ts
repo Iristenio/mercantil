@@ -35,8 +35,35 @@ export interface Produto extends Registro {
   status: StatusCadastro;
 }
 
+/* ---------------- Compras ---------------- */
+
+export type StatusCompra = 'planejada' | 'em_andamento' | 'finalizada' | 'cancelada';
+
+/** Uma lista de compras. No máximo uma fica ativa (planejada ou em andamento) — R1. */
+export interface Compra extends Registro {
+  status: StatusCompra;
+  /** Quando tocou em "Ir às compras" (ISO). */
+  data_inicio: string | null;
+  data_finalizacao: string | null; // ISO
+  /** Congelado ao ir às compras (R4); antes disso é calculado na hora. */
+  valor_previsto: number;
+  /** Gravado ao encerrar (R5); durante a compra é calculado na hora. */
+  valor_real: number;
+}
+
+export type StatusItemCompra = 'pendente' | 'comprado' | 'indisponivel' | 'excluido';
+
+export interface ItemCompra extends Registro {
+  compra_id: Id;
+  produto_id: Id;
+  quantidade: number;
+  /** Preço unitário; vem sugerido do último preço do produto (R3). */
+  preco: number | null;
+  status: StatusItemCompra;
+}
+
 /** Nomes das entidades sincronizadas (cada uma vira uma loja local e uma aba na planilha). */
-export const ENTIDADES = ['categorias', 'produtos'] as const;
+export const ENTIDADES = ['categorias', 'produtos', 'compras', 'itens_compra'] as const;
 export type Entidade = (typeof ENTIDADES)[number];
 
 /* ---------------- Infraestrutura ---------------- */

@@ -2,17 +2,28 @@
 import { useState } from 'preact/hooks';
 import { agruparCatalogo, ativos, limparNome } from '../../dominio/catalogo';
 import { formatarReais } from '../../dominio/dinheiro';
+import { compraAtiva, contagemNaLista, itensDaCompra } from '../../dominio/compras';
+import type { Produto } from '../../dominio/tipos';
 import { useEntidade } from '../../dados/ganchos';
+import { adicionarNaLista } from '../acoes/lista';
 import { useEstado } from '../estado';
-import { IconeBusca, IconeCesta, IconeFechar, IconeMais } from '../icones';
+import { IconeBusca, IconeCesta, IconeFechar, IconeLapis, IconeMais } from '../icones';
 
 export function TelaCatalogo() {
-  const { abrirPainel } = useEstado();
+  const { abrirPainel, avisar } = useEstado();
   const produtos = useEntidade('produtos');
   const categorias = useEntidade('categorias');
+  const compras = useEntidade('compras');
+  const itens = useEntidade('itens_compra');
+  const naLista = contagemNaLista(itensDaCompra(itens, compraAtiva(compras)?.id));
   const [busca, setBusca] = useState('');
   const grupos = agruparCatalogo(produtos, categorias, busca);
   const total = ativos(produtos).length;
+
+  async function adicionar(p: Produto) {
+    const desfazer = await adicionarNaLista(p);
+    avisar({ texto: `${p.nome} na lista`, desfazer });
+  }
 
   return (
     <>
@@ -20,6 +31,7 @@ export function TelaCatalogo() {
         <h1>Catálogo</h1>
         <span class="sub">{total} {total === 1 ? 'produto' : 'produtos'}</span>
       </header>
+      <p class="dica catalogo-dica">Toque num produto para colocá-lo na lista.</p>
       <div class="conteudo catalogo">
         <div class="busca">
           <IconeBusca />
@@ -65,13 +77,30 @@ export function TelaCatalogo() {
               <ul class="lista-itens">
                 {lista.map((p) => (
                   <li key={p.id}>
-                    <button class="linha-item linha-produto" onClick={() => abrirPainel({ tipo: 'produto', id: p.id })}>
+                    <div class={`linha-item linha-produto${naLista.has(p.id) ? ' na-lista' : ''}`} onClick={() => adicionar(p)}>
                       <span class="linha-item-texto">
                         <strong>{p.nome}</strong>
-                        <small>{p.unidade}</small>
+                        <small>
+                          {p.unidade}
+                          {p.ultimo_preco !== null && ` · ${formatarReais(p.ultimo_preco)}`}
+                        </small>
                       </span>
-                      {p.ultimo_preco !== null && <span class="preco">{formatarReais(p.ultimo_preco)}</span>}
-                    </button>
+                      {naLista.has(p.id) && (
+                        <span class="selo" aria-label={`${naLista.get(p.id)} na lista`}>
+                          {naLista.get(p.id)}
+                        </span>
+                      )}
+                      <button
+                        class="botao-icone"
+                        aria-label={`Editar ${p.nome}`}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          abrirPainel({ tipo: 'produto', id: p.id });
+                        }}
+                      >
+                        <IconeLapis />
+                      </button>
+                    </div>
                   </li>
                 ))}
               </ul>

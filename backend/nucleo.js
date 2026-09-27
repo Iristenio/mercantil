@@ -25,6 +25,20 @@ var ESQUEMA = {
       ['status', 's'], ['criado_em', 's'], ['atualizado_em', 's'],
     ],
   },
+  compras: {
+    aba: 'COMPRAS',
+    campos: [
+      ['id', 's'], ['status', 's'], ['data_inicio', 's?'], ['data_finalizacao', 's?'], ['valor_previsto', 'n'], ['valor_real', 'n'],
+      ['criado_em', 's'], ['atualizado_em', 's'],
+    ],
+  },
+  itens_compra: {
+    aba: 'ITENS_COMPRA',
+    campos: [
+      ['id', 's'], ['compra_id', 's'], ['produto_id', 's'], ['quantidade', 'n'], ['preco', 'n?'], ['status', 's'],
+      ['criado_em', 's'], ['atualizado_em', 's'],
+    ],
+  },
 };
 
 var COLUNA_RECEBIDO = '_recebido_em';
