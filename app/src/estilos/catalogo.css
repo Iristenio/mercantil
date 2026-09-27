@@ -160,3 +160,32 @@
 .botao-icone.grande { width: 52px; height: 52px; font-size: 28px; color: var(--primaria); background: var(--superficie-2); }
 .campo-qtd { width: 90px !important; font-size: 20px; font-weight: 700; }
 .botao.fantasma { background: transparent; }
+
+/* ---- Variação de preço (D3) ---- */
+.variacao { font-weight: 650; font-size: 14px; white-space: nowrap; }
+.variacao.subiu { color: var(--perigo); }
+.variacao.caiu { color: var(--sucesso); }
+.variacao.igual { color: var(--texto-2); font-weight: 500; }
+.historico-precos { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
+.historico-precos li { display: flex; align-items: baseline; gap: 12px; padding: 8px 0; border-bottom: 1px solid var(--borda); }
+.historico-precos li span:first-child { color: var(--texto-2); min-width: 92px; }
+.historico-precos strong { font-variant-numeric: tabular-nums; }
+.historico-precos .variacao { margin-left: auto; }
+
+/* ---- Histórico ---- */
+.resumo small.neutro { color: var(--texto-2); }
+.lista-historico { margin-top: 16px; }
+.lista-historico .linha-item-texto strong::first-letter,
+.primeira-maiuscula::first-letter { text-transform: uppercase; }
+.preco-total { flex: none; font-weight: 700; font-variant-numeric: tabular-nums; }
+.preco-total.acima { color: var(--perigo); }
+.placar.estatico { position: static; box-shadow: none; margin: 0; }
+.placar-diferenca { flex-basis: 100%; font-weight: 600; font-size: 14px; }
+.placar-diferenca.subiu { color: var(--perigo); }
+.placar-diferenca.caiu { color: var(--sucesso); }
+.itens-compra { list-style: none; margin: 0; padding: 0; }
+.itens-compra li { display: flex; justify-content: space-between; gap: 12px; padding: 8px 0; border-bottom: 1px solid var(--borda); }
+.itens-compra strong { flex: none; font-variant-numeric: tabular-nums; }
+.itens-compra small { color: var(--aviso); }
+.itens-compra li.indisponivel span, .itens-compra li.pendente span { color: var(--texto-2); }
+.detalhe-compra .grupo-titulo { margin: 8px 0 2px; }

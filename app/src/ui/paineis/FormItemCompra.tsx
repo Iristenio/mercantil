@@ -6,6 +6,7 @@ import { formatarNumero, formatarReais, lerValor } from '../../dominio/dinheiro'
 import { buscar } from '../../dados/repositorio';
 import { removerItemCompra, salvarItemCompra } from '../acoes/lista';
 import { useEstado } from '../estado';
+import { VariacaoPreco } from '../componentes/VariacaoPreco';
 
 const SITUACOES: { valor: StatusItemCompra; rotulo: string }[] = [
   { valor: 'pendente', rotulo: 'Falta pegar' },
@@ -97,6 +98,7 @@ export function FormItemCompra({ id, foco }: { id: string; foco?: 'preco' }) {
           />
         </div>
         {valor !== null && qtd > 0 && <p class="dica">Total do item: {formatarReais(Math.round(qtd * valor * 100) / 100)}</p>}
+        <VariacaoPreco atual={valor} anterior={produto?.ultimo_preco ?? null} sufixo="desde a última compra" />
       </fieldset>
 
       <fieldset>

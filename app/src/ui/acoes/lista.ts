@@ -2,6 +2,7 @@
 import type { Compra, ItemCompra, Produto } from '../../dominio/tipos';
 import { compraAtiva, encerrarCompra, iniciarCompra, novaCompra, novoItemCompra } from '../../dominio/compras';
 import { listarTodos, novoId, type Alteracao } from '../../dados/repositorio';
+import { itensParaRepetir } from '../../dominio/historico';
 import { gravarComDesfazer, type Desfazer } from './catalogo';
 
 /** Toques seguidos são gravados um de cada vez (evita criar duas listas com dois toques rápidos). */
@@ -60,4 +61,27 @@ export function encerrar(compra: Compra, itens: ItemCompra[], produtos: Produto[
     { entidade: 'compras', registro: r.compra },
     ...r.produtos.map((registro) => ({ entidade: 'produtos', registro }) as Alteracao),
   ]);
+}
+
+/**
+ * D4 — repete uma compra do histórico. Sem lista ativa, cria uma. Com lista ativa: "adicionar" junta os
+ * itens a ela; "substituir" cancela a atual (R2) e começa outra só com os itens repetidos.
+ */
+export function repetirCompra(origemId: string, modo: 'adicionar' | 'substituir' = 'adicionar'): Promise<{ desfazer: Desfazer; quantos: number }> {
+  return emOrdem(async () => {
+    const [compras, itens, produtos] = await Promise.all([listarTodos('compras'), listarTodos('itens_compra'), listarTodos('produtos')]);
+    const alteracoes: Alteracao[] = [];
+    let destino = compraAtiva(compras);
+    if (destino && modo === 'substituir') {
+      alteracoes.push({ entidade: 'compras', registro: { ...destino, status: 'cancelada' } });
+      destino = undefined;
+    }
+    if (!destino) {
+      destino = novaCompra({ id: novoId() });
+      alteracoes.push({ entidade: 'compras', registro: destino });
+    }
+    const novos = itensParaRepetir(origemId, itens, produtos, destino.id, novoId);
+    alteracoes.push(...novos.map((registro) => ({ entidade: 'itens_compra', registro }) as Alteracao));
+    return { desfazer: await gravarComDesfazer(alteracoes), quantos: novos.length };
+  });
 }

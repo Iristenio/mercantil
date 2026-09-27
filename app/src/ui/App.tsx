@@ -9,16 +9,19 @@ import { Dialogo } from './componentes/Dialogo';
 import { ProvedorEstado, useEstado, type Painel } from './estado';
 import { TelaLista } from './telas/TelaLista';
 import { TelaCatalogo } from './telas/TelaCatalogo';
+import { TelaHistorico } from './telas/TelaHistorico';
 import { TelaAjustes } from './telas/TelaAjustes';
 import { FormProduto } from './paineis/FormProduto';
 import { FormCategoria } from './paineis/FormCategoria';
 import { FormItemCompra } from './paineis/FormItemCompra';
+import { DetalheCompra } from './paineis/DetalheCompra';
 import { IconeCesta } from './icones';
 
 /** ► Nova tela: acrescente aqui (e em TELAS/MENU, em rotas.ts). */
 const TELA: Record<Tela, () => JSX.Element> = {
   lista: TelaLista,
   catalogo: TelaCatalogo,
+  historico: TelaHistorico,
   config: TelaAjustes,
 };
 
@@ -31,6 +34,8 @@ function tituloPainel(p: Painel): string {
       return p.id ? 'Categoria' : 'Nova categoria';
     case 'item':
       return 'Item da lista';
+    case 'compra':
+      return 'Compra';
   }
 }
 
@@ -42,6 +47,8 @@ function ConteudoPainel({ painel }: { painel: Painel }) {
       return <FormCategoria id={painel.id} />;
     case 'item':
       return <FormItemCompra id={painel.id} foco={painel.foco} />;
+    case 'compra':
+      return <DetalheCompra id={painel.id} />;
   }
 }
 

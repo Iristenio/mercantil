@@ -11,8 +11,11 @@ import { useEntidade } from '../../dados/ganchos';
 import { salvar } from '../../dados/repositorio';
 import { cancelarLista, comecarNovaLista, encerrar, irAsCompras } from '../acoes/lista';
 import { useEstado } from '../estado';
+import { VariacaoPreco } from '../componentes/VariacaoPreco';
+import { useRepetirCompra } from '../acoes/useRepetirCompra';
+import { comprasFinalizadas } from '../../dominio/historico';
 import { irPara } from '../rotas';
-import { IconeBusca, IconeFechar, IconeLista, IconeMais } from '../icones';
+import { IconeBusca, IconeFechar, IconeLista, IconeMais, IconeRepetir } from '../icones';
 
 export function TelaLista() {
   const compras = useEntidade('compras');
@@ -22,7 +25,7 @@ export function TelaLista() {
   const compra = compraAtiva(compras);
   const itens = itensDaCompra(todosItens, compra?.id);
 
-  if (!compra || itens.length === 0) return <ListaVazia compra={compra} />;
+  if (!compra || itens.length === 0) return <ListaVazia compra={compra} compras={compras} todosItens={todosItens} />;
   const dados = { compra, compras, itens, produtos, categorias };
   return compra.status === 'em_andamento' ? <NoMercado {...dados} /> : <Montagem {...dados} />;
 }
@@ -38,7 +41,10 @@ interface Dados {
 const textoPreco = (item: ItemCompra) =>
   item.preco === null ? null : `${formatarReais(item.preco)} × ${formatarNumero(item.quantidade)} = ${formatarReais(subtotal(item))}`;
 
-function ListaVazia({ compra }: { compra?: Compra }) {
+function ListaVazia({ compra, compras, todosItens }: { compra?: Compra; compras: Compra[]; todosItens: ItemCompra[] }) {
+  const repetir = useRepetirCompra();
+  const ultima = comprasFinalizadas(compras)[0];
+  const nUltima = ultima ? itensDaCompra(todosItens, ultima.id).length : 0;
   return (
     <>
       <header class="cabecalho">
@@ -52,6 +58,11 @@ function ListaVazia({ compra }: { compra?: Compra }) {
           <button class="botao primario" onClick={() => irPara('catalogo')}>
             <IconeMais /> Escolher produtos
           </button>
+          {ultima && nUltima > 0 && (
+            <button class="botao" onClick={() => repetir(ultima.id)}>
+              <IconeRepetir /> Repetir a última compra ({nUltima} {nUltima === 1 ? 'item' : 'itens'})
+            </button>
+          )}
         </div>
       </div>
     </>
@@ -248,6 +259,7 @@ function NoMercado({ compra, itens, produtos, categorias }: Dados) {
                       <small>
                         {item.status === 'indisponivel' ? 'não achei' : (textoPreco(item) ?? 'toque para informar o preço')}
                       </small>
+                      {item.status !== 'indisponivel' && <VariacaoPreco atual={item.preco} anterior={produto?.ultimo_preco ?? null} mostrarIgual={false} />}
                     </span>
                   </div>
                 </li>
